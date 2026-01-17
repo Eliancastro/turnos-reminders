@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Reservar turno</title>
+</head>
+<body>
+  <h2>Reservá tu turno</h2>
+  <form id="form">
+    <input name="nombre" placeholder="Nombre" required /><br>
+    <input name="telefono" placeholder="Teléfono"><br>
+    <input name="email" placeholder="Email"><br>
+    <input type="datetime-local" name="fechaHora" required><br>
+    <input name="servicio" placeholder="Servicio"><br>
+    <button>Reservar</button>
+  </form>
+
+  <script>
+    document.getElementById('form').onsubmit = async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      await fetch('/api/turnos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      alert('✅ Turno reservado');
+    };
+  </script>
+</body>
+</html>
