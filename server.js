@@ -1,15 +1,6 @@
 require('dotenv').config();
-const nodemailer = require("nodemailer");
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: true, // 👈 CLAVE (465)
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 const express = require('express');
 const bodyParser = require('body-parser');
 const { MongoClient, ObjectId } = require('mongodb');
@@ -50,18 +41,18 @@ app.post("/api/turnos", async (req, res) => {
 
 
     // Envío de mail en segundo plano
-    transporter.sendMail({
-      from: `"Turnos" <${process.env.SMTP_USER}>`,
-      to: req.body.email,
-      subject: "Turno confirmado ✅",
-      html: `
-        <h2>Turno reservado</h2>
-        <p>Fecha: ${req.body.fecha}</p>
-        <p>Hora: ${req.body.hora}</p>
-      `,
-    })
-    .then(() => console.log("📧 Mail enviado"))
-    .catch(err => console.error("❌ Error mail:", err.message));
+  resend.emails.send({
+  from: "Turnos <onboarding@resend.dev>",
+  to: req.body.email,
+  subject: "Turno confirmado ✅",
+  html: `
+    <h2>Turno reservado</h2>
+    <p>Fecha: ${req.body.fecha}</p>
+    <p>Hora: ${req.body.hora}</p>
+  `,
+})
+.then(() => console.log("📧 Mail enviado (Resend)"))
+.catch(err => console.error("❌ Error Resend:", err));
 
   } catch (error) {
     console.error("❌ Error creando turno:", error);
