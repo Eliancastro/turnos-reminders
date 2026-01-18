@@ -33,35 +33,39 @@ async function initDb() {
   console.log('✅ MongoDB conectado');
 }
 
-app.post('/api/turnos', async (req, res) => {
-  const { nombre, telefono, email, fechaHora, servicio } = req.body;
-  const turno = {
-    nombre,
-    telefono,
-    email,
-    servicio,
-    fechaHora: new Date(fechaHora),
-    estado: 'pendiente',
-    createdAt: new Date()
-  };
-  await turnos.insertOne(turno);
-  await transporter.sendMail({
-  from: `"Turnos Online" <${process.env.SMTP_USER}>`,
-  to: req.body.email,
-  subject: "Confirmación de turno",
-  html: `
-    <h2>✅ Turno confirmado</h2>
-    <p>Hola ${req.body.nombre},</p>
-    <p>Tu turno fue reservado correctamente.</p>
-    <p><b>Fecha:</b> ${req.body.fecha}</p>
-    <p><b>Hora:</b> ${req.body.hora}</p>
-    <br/>
-    <p>Gracias por usar nuestro sistema.</p>
-  `,
+app.post("/api/turnos", async (req, res) => {
+  try {
+    const turno = {
+      fecha: req.body.fecha,
+      hora: req.body.hora,
+      email: req.body.email,
+    };
+
+    await turnos.insertOne(turno);
+
+    // Respondemos inmediatamente
+    res.json({ ok: true, message: "Turno reservado" });
+
+    // Envío de mail en segundo plano
+    transporter.sendMail({
+      from: `"Turnos" <${process.env.SMTP_USER}>`,
+      to: req.body.email,
+      subject: "Turno confirmado ✅",
+      html: `
+        <h2>Turno reservado</h2>
+        <p>Fecha: ${req.body.fecha}</p>
+        <p>Hora: ${req.body.hora}</p>
+      `,
+    })
+    .then(() => console.log("📧 Mail enviado"))
+    .catch(err => console.error("❌ Error mail:", err.message));
+
+  } catch (error) {
+    console.error("❌ Error creando turno:", error);
+    res.status(500).json({ ok: false, message: "Error al reservar turno" });
+  }
 });
 
-  res.json({ ok: true });
-});
 
 app.get('/api/turnos', async (req, res) => {
   const items = await turnos.find().sort({ fechaHora: 1 }).toArray();
