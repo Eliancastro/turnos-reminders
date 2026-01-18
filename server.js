@@ -1,5 +1,14 @@
 require('dotenv').config();
 const nodemailer = require("nodemailer");
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 const express = require('express');
 const bodyParser = require('body-parser');
 const { MongoClient, ObjectId } = require('mongodb');
@@ -22,16 +31,6 @@ async function initDb() {
   const db = client.db(DB_NAME);
   turnos = db.collection('turnos');
   console.log('✅ MongoDB conectado');
-  const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
 }
 
 app.post('/api/turnos', async (req, res) => {
