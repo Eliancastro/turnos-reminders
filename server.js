@@ -45,6 +45,8 @@ app.post("/api/turnos", async (req, res) => {
 
     // Respondemos inmediatamente
     res.json({ ok: true, message: "Turno reservado" });
+    console.log("📩 Email recibido:", req.body.email);
+
 
     // Envío de mail en segundo plano
     transporter.sendMail({
