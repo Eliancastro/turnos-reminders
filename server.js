@@ -26,41 +26,45 @@ async function initDb() {
 }
 
 app.post("/api/turnos", async (req, res) => {
-  console.log("BODY:", req.body);
-
   try {
-    const turno = {
-      fecha: req.body.fecha,
-      hora: req.body.hora,
-      email: req.body.email,
-    };
+    const { nombre, telefono, email, fechaHora, servicio } = req.body;
 
-    await turnos.insertOne(turno);
+    const [fecha, hora] = fechaHora.split("T");
 
-    // Respondemos inmediatamente
+    await turnos.insertOne({
+      nombre,
+      telefono,
+      email,
+      fecha,
+      hora,
+      servicio,
+    });
+
+    // Respuesta inmediata
     res.json({ ok: true, message: "Turno reservado" });
-    console.log("📩 Email recibido:", req.body.email);
 
-
-    // Envío de mail en segundo plano
-  resend.emails.send({
-  from: "Turnos <onboarding@resend.dev>",
-  to: req.body.email,
-  subject: "Turno confirmado ✅",
-  html: `
-    <h2>Turno reservado</h2>
-    <p>Fecha: ${req.body.fecha}</p>
-    <p>Hora: ${req.body.hora}</p>
-  `,
-})
-.then(() => console.log("📧 Mail enviado (Resend)"))
-.catch(err => console.error("❌ Error Resend:", err));
+    // Mail en segundo plano
+    resend.emails.send({
+      from: "Turnos <onboarding@resend.dev>",
+      to: email,
+      subject: "Turno confirmado ✅",
+      html: `
+        <h2>Turno reservado</h2>
+        <p><strong>Nombre:</strong> ${nombre}</p>
+        <p><strong>Servicio:</strong> ${servicio}</p>
+        <p><strong>Fecha:</strong> ${fecha}</p>
+        <p><strong>Hora:</strong> ${hora}</p>
+      `,
+    })
+    .then(() => console.log("📧 Mail enviado (Resend)"))
+    .catch(err => console.error("❌ Error Resend:", err));
 
   } catch (error) {
     console.error("❌ Error creando turno:", error);
     res.status(500).json({ ok: false, message: "Error al reservar turno" });
   }
 });
+
 
 
 app.get('/api/turnos', async (req, res) => {
