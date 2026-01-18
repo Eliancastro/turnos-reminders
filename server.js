@@ -26,6 +26,8 @@ async function initDb() {
 }
 
 app.post("/api/turnos", async (req, res) => {
+  console.log("BODY:", req.body);
+
   try {
     const turno = {
       fecha: req.body.fecha,
