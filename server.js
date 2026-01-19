@@ -1,12 +1,11 @@
 import 'dotenv/config';
-const express = require('express');
-const { MongoClient, ObjectId } = require('mongodb');
+import express from 'express';
+import { MongoClient } from 'mongodb';
 import sgMail from '@sendgrid/mail';
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const path = require('path');
-
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import path from 'path';
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
