@@ -1,39 +1,53 @@
-import express from 'express';
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import { MongoClient } from "mongodb";
 import sgMail from "@sendgrid/mail";
-import 'dotenv/config';
-dotenv.config();
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { MongoClient } from 'mongodb';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// ===============================
+// CONFIG BÁSICA
+// ===============================
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
+// __dirname en ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, "public")));
+
+// ===============================
+// VARIABLES DE ENTORNO
+// ===============================
 const MONGODB_URI = process.env.MONGODB_URI;
-const DB_NAME = 'turnos_db';
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const DB_NAME = "turnos_db";
+const PORT = process.env.PORT || 3000;
 
+// ===============================
+// SENDGRID
+// ===============================
+sgMail.setApiKey(SENDGRID_API_KEY);
+
+// ===============================
+// MONGODB
+// ===============================
 let turnos;
 
 async function initDb() {
   const client = new MongoClient(MONGODB_URI);
   await client.connect();
   const db = client.db(DB_NAME);
-  turnos = db.collection('turnos');
-  console.log('✅ MongoDB conectado');
+  turnos = db.collection("turnos");
+  console.log("✅ MongoDB conectado");
 }
 
-
+// ===============================
+// ENDPOINT CREAR TURNO
+// ===============================
 app.post("/api/turnos", async (req, res) => {
   try {
     const { nombre, telefono, email, fechaHora, servicio } = req.body;
@@ -47,15 +61,16 @@ app.post("/api/turnos", async (req, res) => {
       fecha,
       hora,
       servicio,
+      createdAt: new Date(),
     });
 
-    // RESPONDEMOS UNA SOLA VEZ
+    // RESPUESTA INMEDIATA
     res.json({ ok: true, message: "Turno reservado" });
 
     // MAIL EN SEGUNDO PLANO
     const msg = {
       to: email,
-      from: "Turnos <no-reply@tudominio.com>", // puede ser cualquier mail válido
+      from: "Turnos <no-reply@resend.dev>", // funciona sin dominio propio
       subject: "Turno confirmado ✅",
       html: `
         <h2>Turno reservado</h2>
@@ -69,7 +84,9 @@ app.post("/api/turnos", async (req, res) => {
     sgMail
       .send(msg)
       .then(() => console.log("📧 Mail enviado (SendGrid)"))
-      .catch(err => console.error("❌ Error SendGrid:", err));
+      .catch(err =>
+        console.error("❌ Error SendGrid:", err.response?.body || err)
+      );
 
   } catch (error) {
     console.error("❌ Error creando turno:", error);
@@ -79,19 +96,19 @@ app.post("/api/turnos", async (req, res) => {
   }
 });
 
-
-
-
-
-app.get('/api/turnos', async (req, res) => {
-  const items = await turnos.find().sort({ fechaHora: 1 }).toArray();
+// ===============================
+// ENDPOINT LISTAR TURNOS
+// ===============================
+app.get("/api/turnos", async (req, res) => {
+  const items = await turnos.find().sort({ createdAt: -1 }).toArray();
   res.json(items);
 });
 
-const PORT = 3000;
-
+// ===============================
+// START SERVER
+// ===============================
 initDb().then(() => {
   app.listen(PORT, () =>
-    console.log(`🚀 Servidor en http://localhost:${PORT}`)
+    console.log(`🚀 Servidor en puerto ${PORT}`)
   );
 });
