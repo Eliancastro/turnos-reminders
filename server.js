@@ -1,13 +1,9 @@
-require('dotenv').config();
-
-import sgMail from '@sendgrid/mail';
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-
+import 'dotenv/config';
 const express = require('express');
-const bodyParser = require('body-parser');
 const { MongoClient, ObjectId } = require('mongodb');
+import sgMail from '@sendgrid/mail';
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 
