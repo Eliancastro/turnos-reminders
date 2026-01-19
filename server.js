@@ -70,7 +70,7 @@ app.post("/api/turnos", async (req, res) => {
     // MAIL EN SEGUNDO PLANO
     const msg = {
       to: email,
-      from: "Turnos <no-reply@resend.dev>", // funciona sin dominio propio
+      from: "Turnos <turnos.tunegocio@gmail.com>", // funciona sin dominio propio
       subject: "Turno confirmado ✅",
       html: `
         <h2>Turno reservado</h2>
