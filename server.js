@@ -1,6 +1,7 @@
 require('dotenv').config();
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
+import sgMail from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail';
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const { MongoClient, ObjectId } = require('mongodb');
@@ -25,6 +26,7 @@ async function initDb() {
   console.log('✅ MongoDB conectado');
 }
 
+
 app.post("/api/turnos", async (req, res) => {
   try {
     const { nombre, telefono, email, fechaHora, servicio } = req.body;
@@ -43,27 +45,30 @@ app.post("/api/turnos", async (req, res) => {
     // Respuesta inmediata
     res.json({ ok: true, message: "Turno reservado" });
 
-    // Mail en segundo plano
-    resend.emails.send({
-      from: "Turnos <onboarding@resend.dev>",
+    // Mail en segundo plano (SendGrid)
+    sgMail.send({
       to: email,
+      from: "turnos@sendgrid.net",
       subject: "Turno confirmado ✅",
-      html: `
-        <h2>Turno reservado</h2>
-        <p><strong>Nombre:</strong> ${nombre}</p>
-        <p><strong>Servicio:</strong> ${servicio}</p>
-        <p><strong>Fecha:</strong> ${fecha}</p>
-        <p><strong>Hora:</strong> ${hora}</p>
-      `,
+      text: `Hola ${nombre},
+
+Tu turno fue reservado correctamente.
+
+📅 Fecha: ${fecha}
+⏰ Hora: ${hora}
+🛎 Servicio: ${servicio}
+
+Gracias.`,
     })
-    .then(() => console.log("📧 Mail enviado (Resend)"))
-    .catch(err => console.error("❌ Error Resend:", err));
+    .then(() => console.log("📧 Mail enviado (SendGrid)"))
+    .catch(err => console.error("❌ Error SendGrid:", err));
 
   } catch (error) {
     console.error("❌ Error creando turno:", error);
     res.status(500).json({ ok: false, message: "Error al reservar turno" });
   }
 });
+
 
 
 
